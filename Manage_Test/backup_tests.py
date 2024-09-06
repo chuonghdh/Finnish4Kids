@@ -11,7 +11,7 @@ st.title('Back up data')
 st.write('This is a page to download all data from host')
 
 # Set the directory where your CSV files are stored
-folder_path = "prd_Data"  # Change this to your CSV directory path
+folder_path = "Data"  # Change this to your CSV directory path
 
 # Loop through each file in the directory
 if os.path.exists(folder_path):  # Check if the folder exists and is a directory
