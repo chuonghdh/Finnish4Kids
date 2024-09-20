@@ -1,80 +1,18 @@
-import os
-import requests
 import streamlit as st
 import pandas as pd
+import os
+import requests
+import common as cm
 from io import BytesIO
 from PIL import ImageOps, Image
+from Manage_Test import upload_test as up
 
 from Manage_Test.edit_question import show_question_editor
 
 # Constants
-CSV_FILE_PATH = 'Data/TestsList.csv'
+#TESTS_CSV_FILE_PATH = 'Data/TestsList.csv'
 PLACEHOLDER_IMAGE = "Data/image/placeholder_image.png"
 IMAGE_SIZE = 60
-
-# Utility Functions
-def cache_clear():
-    """Clear Streamlit cache."""
-    st.cache_data.clear()
-
-# CSV-related Functions
-#@st.cache_data
-def read_csv_file(filename):
-    """Read data from a CSV file."""
-    try:
-        df = pd.read_csv(filename)
-        return df
-    except FileNotFoundError:
-        st.error(f"File not found: {filename}")
-        return pd.DataFrame()
-    except pd.errors.EmptyDataError:
-        st.error(f"No data: The file {filename} is empty.")
-        return pd.DataFrame()
-    except pd.errors.ParserError:
-        st.error(f"Parsing error: The file {filename} is corrupt or has an invalid format.")
-        return pd.DataFrame()
-    except Exception as e:
-        st.error(f"Unexpected error: {e}")
-        return pd.DataFrame()
-
-def save_to_csv(data, filename=CSV_FILE_PATH):
-    """Save data to the CSV file."""
-    try:
-        new_df = pd.DataFrame(data)
-        if os.path.exists(filename):
-            df = read_csv_file(filename)
-            df = pd.concat([df, new_df], ignore_index=True)
-        else:
-            df = new_df
-        df.to_csv(filename, index=False)
-        cache_clear()
-        st.success("Data saved successfully.")
-    except Exception as e:
-        st.error(f"Error saving data to CSV: {e}")
-
-def delete_from_csv(row_index, filename=CSV_FILE_PATH):
-    """Delete a row from the CSV file."""
-    try:
-        if os.path.exists(filename):
-            df = read_csv_file(filename)
-            df = df.drop(index=row_index)
-            df.to_csv(filename, index=False)
-            cache_clear()
-            st.success("Row deleted successfully.")
-    except Exception as e:
-        st.error(f"Error deleting row from CSV: {e}")
-
-def update_csv_file(row_index, new_data, filename=CSV_FILE_PATH):
-    """Update a row in the CSV file."""
-    try:
-        if os.path.exists(filename):
-            df = read_csv_file(filename)
-            df.loc[row_index] = new_data
-            df.to_csv(filename, index=False)
-            cache_clear()
-            st.success("Data updated successfully.")
-    except Exception as e:
-        st.error(f"Error updating CSV file: {e}")
 
 # Image-related Functions
 @st.cache_data
@@ -116,7 +54,7 @@ def display_image_or_text(link, column, size=IMAGE_SIZE):
 # UI Functions
 def show_data_table():
     """Display the data table with rename, delete, and edit question options."""
-    df = read_csv_file(CSV_FILE_PATH)
+    df = cm.read_csv_file(cm.TESTS_CSV_FILE_PATH, cm.prd_TestsList_path)
     if df.empty:
         st.write("No tests available.")
         return
@@ -145,10 +83,16 @@ def show_data_table():
 
     for i, row in df.iterrows():
         display_table_row(i, row, df)
-
-    if st.button('➕ Add Test'):
-        st.session_state.page = 'form'
-        st.rerun()
+    col1, col2 = st.columns([1,1])
+    with col1:
+        if st.button('➕ Add Test'):
+            st.session_state.page = 'form'
+            st.rerun()
+    with col2:
+        if st.button('⬆️ Upload Test'):
+            st.warning("Upload Test Function!!!")
+            st.session_state.page = 'upload_page'
+            st.rerun()
 
 def display_table_row(row_index, row, df):
     """Display a single row in the data table."""
@@ -182,7 +126,7 @@ def handle_rename_mode(row_index, row, cols):
     done_button = cols[len(row)].button('✅', help="Done", key=f'done_{row_index}')
     if done_button:
         st.session_state.rename_mode = None
-        update_csv_file(row_index, new_data)
+        cm.update_to_csv(row_index = row_index, new_data = new_data, repo_path = cm.TESTS_CSV_FILE_PATH, prd_path = cm.prd_TestsList_path)
         st.rerun()
 
 def handle_normal_mode(row_index, row, cols):
@@ -227,15 +171,15 @@ def handle_normal_mode(row_index, row, cols):
         st.rerun()
 
     if delete_button:
-        delete_from_csv(row_index)
+        cm.delete_from_csv(row_index=row_index, repo_path=cm.TESTS_CSV_FILE_PATH, prd_path=cm.prd_TestsList_path)
         st.rerun() 
 
 def add_test_form():
     """Create and handle the add test form."""
-    st.write("### Add New Entry")
+    st.write("### Add New Test")
     form = st.form(key='add_entry_form')
 
-    df = read_csv_file(CSV_FILE_PATH)
+    df = cm.read_csv_file(cm.TESTS_CSV_FILE_PATH, cm.prd_TestsList_path)
 
     if df.empty:
         new_test_id = 1  # Start TestID from 1 if the dataframe is empty
@@ -248,10 +192,10 @@ def add_test_form():
     form_data = {col: form.text_input(f'Enter the {col}:') for col in df.columns if col != 'TestID'}
 
     submit, cancel = form.columns(2)
-    if submit.form_submit_button(label='Add Entry'):
+    if submit.form_submit_button(label='Add New Test'):
         form_data['TestID'] = str(new_test_id)
         new_entry = {col: [form_data[col]] for col in df.columns}
-        save_to_csv(new_entry)
+        cm.save_to_csv(data=new_entry, repo_path=cm.TESTS_CSV_FILE_PATH ,prd_path=cm.prd_TestsList_path)
         st.session_state.page = 'table'
         st.rerun()
 
@@ -277,6 +221,8 @@ def show_page_testlist():
     elif st.session_state.page == 'edit_question':
         #edit_questions_page()
         show_question_editor()
+    elif st.session_state.page == 'upload_page':
+        up.show_upload_page()
 
 # Main Page of Edit Test
 # Main Page Title

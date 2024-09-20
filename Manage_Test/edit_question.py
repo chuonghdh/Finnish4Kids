@@ -1,23 +1,40 @@
 import streamlit as st
 import pandas as pd
+import common as cm
+import os
 from st_aggrid import AgGrid, GridOptionsBuilder, GridUpdateMode
 
 # Constants
-TESTS_CSV_FILE_PATH = 'Data/TestsList.csv'  # Adjust the path if necessary
-WORDS_CSV_FILE_PATH = 'Data/WordsList.csv'  # Adjust the path if necessary
+# TESTS_CSV_FILE_PATH = 'Data/TestsList.csv'  # Adjust the path if necessary
+# WORDS_CSV_FILE_PATH = 'Data/WordsList.csv'  # Adjust the path if necessary
 
-def read_csv_file(filename):
-    """Read data from a CSV file."""
-    try:
-        return pd.read_csv(filename)
-    except Exception as e:
-        st.error(f"Error reading CSV file: {e}")
-        return pd.DataFrame()
+# File path for the CSV in the Streamlit environment
+# prd_TestsList_path = 'prd_Data/prd_TestsListData.csv'
+# prd_WordsList_path = 'prd_Data/prd_WordsListData.csv'
+
+# def read_csv_file(repo_path, prd_path):
+#     """Read data from a CSV file."""
+#     try:
+#         if os.path.exists(prd_path):
+#             df = pd.read_csv(prd_path)
+#             #st.info("Data loaded from local storage.")
+#         else:
+#             # Initial load from a repository, as a fallback (if needed)
+#             df = pd.read_csv(repo_path)  # Replace with your default CSV
+#             df.to_csv(prd_path, index=False)  # Save to local environment
+#             #st.info("Data loaded from repository and saved to local storage.")
+#         return df
+#     except (FileNotFoundError, pd.errors.EmptyDataError, pd.errors.ParserError) as e:
+#         st.error(f"Error loading file: {repo_path} - {str(e)}")
+#         return pd.DataFrame()
+#     except Exception as e:
+#         st.error(f"Unexpected error: {e}")
+#         return pd.DataFrame()
 
 def get_filtered_words(test_id):
     """Read and filter the WordsList.csv file based on the TestID."""
     try:
-        df_words = read_csv_file(WORDS_CSV_FILE_PATH)
+        df_words = cm.read_csv_file(cm.WORDS_CSV_FILE_PATH, cm.prd_WordsList_path)
         filtered_words = df_words[df_words['TestID'] == int(test_id)]
         return filtered_words, df_words  # Return both the filtered and full DataFrame
     except Exception as e:
@@ -68,7 +85,7 @@ def show_editable_table_with_delete(df, full_df, test_id):
                     full_df = full_df[full_df['WordID'] != word_id_to_delete]
                     
                     # Save the updated DataFrame back to the CSV
-                    full_df.to_csv(WORDS_CSV_FILE_PATH, index=False)
+                    full_df.to_csv(cm.prd_WordsList_path, index=False)
                     
                     st.success(f"Word ID {word_id_to_delete} has been deleted successfully!")
                     st.rerun()  # Refresh the page to reflect the changes
@@ -102,7 +119,7 @@ def update_words_csv(updated_df, full_df, test_id):
         st.write(f'Unique Test IDs = {full_df["TestID"].unique()}')
 
         # Save the updated DataFrame back to the CSV
-        full_df.to_csv(WORDS_CSV_FILE_PATH, index=False)
+        full_df.to_csv(cm.prd_WordsList_path, index=False)
         st.success("WordsList.csv has been updated successfully!")
     except Exception as e:
         st.error(f"Error updating WordsList.csv: {e}")
@@ -135,7 +152,7 @@ def insert_new_word(new_word, language_code, new_WordPhonetic, new_WordDescripti
         full_df = pd.concat([full_df, new_row_df], ignore_index=True)
 
         # Save the updated DataFrame back to the CSV
-        full_df.to_csv(WORDS_CSV_FILE_PATH, index=False)
+        full_df.to_csv(cm.prd_WordsList_path, index=False)
         st.success("New word has been added successfully!")
         st.rerun()
     except Exception as e:
@@ -164,7 +181,7 @@ def show_question_editor():
         return
 
     test_id = selected_test
-    df_tests = read_csv_file(TESTS_CSV_FILE_PATH)
+    df_tests = cm.read_csv_file(cm.TESTS_CSV_FILE_PATH, cm.prd_TestsList_path)
 
     # Filter the DataFrame for the selected TestID in TestsList.csv
     test_info = df_tests[df_tests['TestID'] == int(test_id)]

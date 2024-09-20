@@ -5,7 +5,11 @@ gTTS
 streamlit-aggrid
 gdown
 openpyxl
-google-auth
-google-auth-oauthlib
-google-auth-httplib2
-google-api-python-client
+chardet
+pyperclip
+streamlit-js-eval
+#pydub
+#io
+
+#streamlit_js_eval(js_expressions="sessionStorage.getItem('wordScore')", key="WORD_SCORE1")
+#streamlit_js_eval(js_expressions="sessionStorage.clear();")

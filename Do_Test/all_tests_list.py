@@ -1,11 +1,13 @@
 import streamlit as st
 import pandas as pd
+import os
 import requests
 from PIL import Image
 from io import BytesIO
 import logging
 from Do_Test.define_metadata import main_define_metadata
 from Do_Test.do_test import main_do_test
+from Do_Test.result_page import main_result_page
 
 # Setup logging
 logging.basicConfig(level=logging.INFO)
@@ -16,28 +18,27 @@ TESTS_CSV_FILE_PATH = 'Data/TestsList.csv'  # Adjust the path if necessary
 PLACEHOLDER_IMAGE = "Data/image/placeholder_image.png"
 IMAGE_SIZE = 80  # Set this to the desired thumbnail size (e.g., 60 pixels)
 
-@st.cache_data
-def read_csv_file(filename):
+## File path for the CSV in the Streamlit environment
+prd_TestsList_path = 'prd_Data/prd_TestsListData.csv'
+
+#@st.cache_data
+def read_csv_file(repo_path, prd_path):
     """Read data from a CSV file."""
     try:
-        df = pd.read_csv(filename)
-        logger.info(f"Successfully loaded data from {filename}")
+        if os.path.exists(prd_path):
+            df = pd.read_csv(prd_path)
+            #st.info("Data loaded from local storage.")
+        else:
+            # Initial load from a repository, as a fallback (if needed)
+            df = pd.read_csv(repo_path)  # Replace with your default CSV
+            df.to_csv(prd_path, index=False)  # Save to local environment
+            #st.info("Data loaded from repository and saved to local storage.")
         return df
-    except FileNotFoundError:
-        st.error(f"File not found: {filename}")
-        logger.error(f"File not found: {filename}")
-        return pd.DataFrame()
-    except pd.errors.EmptyDataError:
-        st.error(f"No data: The file {filename} is empty.")
-        logger.error(f"No data: The file {filename} is empty.")
-        return pd.DataFrame()
-    except pd.errors.ParserError:
-        st.error(f"Parsing error: The file {filename} is corrupt or has an invalid format.")
-        logger.error(f"Parsing error: The file {filename} is corrupt or has an invalid format.")
+    except (FileNotFoundError, pd.errors.EmptyDataError, pd.errors.ParserError) as e:
+        st.error(f"Error loading file: {repo_path} - {str(e)}")
         return pd.DataFrame()
     except Exception as e:
         st.error(f"Unexpected error: {e}")
-        logger.exception("Unexpected error occurred while reading the CSV file.")
         return pd.DataFrame()
 
 @st.cache_data
@@ -93,7 +94,7 @@ def main_show_test_list():
     if st.session_state.page == 'test_list':
         st.title("Test List")
         # Load and display the test list
-        df = read_csv_file(TESTS_CSV_FILE_PATH)
+        df = read_csv_file(TESTS_CSV_FILE_PATH, prd_TestsList_path)
         if not df.empty:
             show_test_list(df)
         else:
@@ -102,5 +103,7 @@ def main_show_test_list():
             main_define_metadata()
     elif st.session_state.page == 'do_test':
             main_do_test()
+    elif st.session_state.page == 'result_page':
+            main_result_page()        
 
 main_show_test_list()

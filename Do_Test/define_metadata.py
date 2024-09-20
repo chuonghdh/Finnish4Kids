@@ -6,6 +6,7 @@ from io import BytesIO
 import logging
 import time
 import os
+from streamlit_js_eval import streamlit_js_eval
 #from Do_Test.do_test import main_do_test
 
 # Setup logging
@@ -20,12 +21,26 @@ ATTEMPTDATA_CSV_FILE_PATH = 'Data/AttemptData.csv'
 PLACEHOLDER_IMAGE = "Data/image/placeholder_image.png"
 IMAGE_SIZE = 140  # Set this to the desired thumbnail size
 
-def read_csv_file(repo_path):
+# File path for the CSV in the Streamlit environment
+prd_UserData_path = 'prd_Data/prd_UserData.csv'
+prd_ClassData_path = 'prd_Data/prd_ClassData.csv'
+prd_AttemptData_path = 'prd_Data/prd_AttemptData.csv'
+prd_TestsList_path = 'prd_Data/prd_TestsListData.csv'
+
+def read_csv_file(repo_path, prd_path):
     """Read data from a CSV file."""
     try:
-        df = pd.read_csv(repo_path)
-        logger.info(f"Successfully loaded data from {repo_path}")
+        #df = pd.read_csv(filename)
+        #logger.info(f"Successfully loaded data from {filename}")
         
+        if os.path.exists(prd_path):
+            df = pd.read_csv(prd_path)
+            #st.info("Data loaded from local storage.")
+        else:
+            # Initial load from a repository, as a fallback (if needed)
+            df = pd.read_csv(repo_path)  # Replace with your default CSV
+            df.to_csv(prd_path, index=False)  # Save to local environment
+            #st.info("Data loaded from repository and saved to local storage.")
         return df
     except (FileNotFoundError, pd.errors.EmptyDataError, pd.errors.ParserError) as e:
         st.error(f"Error loading file: {repo_path} - {str(e)}")
@@ -61,10 +76,10 @@ def main_define_metadata():
     st.title("Pre-Test")
 
     # Load CSV data
-    df_test = read_csv_file(TESTS_CSV_FILE_PATH)
-    df_user = read_csv_file(USERDATA_CSV_FILE_PATH)
-    df_class = read_csv_file(CLASSDATA_CSV_FILE_PATH)
-    df_attempt = read_csv_file(ATTEMPTDATA_CSV_FILE_PATH)
+    df_test = read_csv_file(TESTS_CSV_FILE_PATH, prd_TestsList_path)
+    df_user = read_csv_file(USERDATA_CSV_FILE_PATH, prd_UserData_path)
+    df_class = read_csv_file(CLASSDATA_CSV_FILE_PATH, prd_ClassData_path)
+    df_attempt = read_csv_file(ATTEMPTDATA_CSV_FILE_PATH, prd_AttemptData_path)
 
     # Filter for the selected TestID
     test_info = df_test[df_test['TestID'] == test_id]
@@ -93,7 +108,7 @@ def main_define_metadata():
                         'Password': ['123456']  # Default password for new users
                     })
                     df_user = pd.concat([df_user, new_user_df], ignore_index=True)
-                    save_to_csv(df_user, USERDATA_CSV_FILE_PATH, "New User Name recorded successfully.")
+                    save_to_csv(df_user, prd_UserData_path, "New User Name recorded successfully.")
                     time.sleep(0.8)
                     st.rerun()
 
@@ -117,7 +132,7 @@ def main_define_metadata():
                         'TeacherName': new_teacher_input  #Temp can leave blank
                     })
                     df_class = pd.concat([df_class, new_class_df], ignore_index=True)
-                    save_to_csv(df_class, CLASSDATA_CSV_FILE_PATH, "New Class Name recorded successfully.")
+                    save_to_csv(df_class, prd_ClassData_path, "New Class Name recorded successfully.")
                     time.sleep(0.8)
                     st.rerun()
     # Action buttons
@@ -146,10 +161,14 @@ def main_define_metadata():
             })
 
             df_attempt = pd.concat([df_attempt, new_attempt_df], ignore_index=True)
-            save_to_csv(df_attempt, ATTEMPTDATA_CSV_FILE_PATH, "Test attempt recorded successfully.")
+            save_to_csv(df_attempt, prd_AttemptData_path, "Test attempt recorded successfully.")
             st.session_state.page = 'do_test'
             st.session_state.word_index = 1
-            st.session_state.show_image = True
+            st.session_state.test_result = None
+            st.session_state.AttemptID = new_attempt_id
+            st.session_state.tid = 1
+            st.session_state.last_score = None
+            streamlit_js_eval(js_expressions="sessionStorage.setItem('wordScore', -1);", key="clear0")
             time.sleep(0.5)
             st.rerun()
             
