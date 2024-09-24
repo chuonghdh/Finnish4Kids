@@ -17,6 +17,8 @@ prd_WordsList_path = 'prd_Data/prd_WordsListData.csv'
 prd_UserData_path = 'prd_Data/prd_UserData.csv'
 prd_ClassData_path = 'prd_Data/prd_ClassData.csv'
 prd_AttemptData_path = 'prd_Data/prd_AttemptData.csv'
+prd_Audio_path = 'prd_Data/prd_Audio'
+prd_Temp_path = 'prd_Data/prd_Temp'
 
 def initialize_folder(directory_path):
     # Create the directory if it doesn't exist

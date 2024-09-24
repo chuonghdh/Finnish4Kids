@@ -8,8 +8,9 @@ openpyxl
 chardet
 pyperclip
 streamlit-js-eval
-#pydub
+googletrans==4.0.0-rc1
+pydub
 #io
+#glob
+#base64
 
-#streamlit_js_eval(js_expressions="sessionStorage.getItem('wordScore')", key="WORD_SCORE1")
-#streamlit_js_eval(js_expressions="sessionStorage.clear();")
