@@ -17,9 +17,10 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 # Constants for file paths
+PLACEHOLDER_IMAGE = 'Data/image/placeholder_image.png'
 IMAGE_SIZE = 80  # Set this to the desired thumbnail size (e.g., 60 pixels)
 
-#@st.cache_data
+@st.cache_data
 def fetch_and_resize_image(url, size):
     """Fetch an image from a URL and resize it to the given size."""
     try:
@@ -29,10 +30,10 @@ def fetch_and_resize_image(url, size):
         return img
     except requests.RequestException as e:
         logger.error(f"Error fetching image from {url}: {e}")
-        return Image.open( cm.PLACEHOLDER_IMAGE).resize((size, size))
+        return Image.open( PLACEHOLDER_IMAGE).resize((size, size))
     except Exception as e:
         logger.error(f"Error processing image from {url}: {e}")
-        return Image.open( cm.PLACEHOLDER_IMAGE).resize((size, size))
+        return Image.open( PLACEHOLDER_IMAGE).resize((size, size))
 
 def get_filtered_words(test_id):
     """Read and filter the WordsList.csv file based on the TestID."""
@@ -81,7 +82,7 @@ def show_test_list(df):
 
         # Check if the image URL is valid; if not, use the placeholder image
         image_url = row["Image"]
-        img = fetch_and_resize_image(image_url if image_url else cm.PLACEHOLDER_IMAGE, IMAGE_SIZE)
+        img = fetch_and_resize_image(image_url if image_url else PLACEHOLDER_IMAGE, IMAGE_SIZE)
 
         # Display row data with improved layout
         cols[0].image(img)
