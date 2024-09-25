@@ -10,6 +10,7 @@ WORDS_CSV_FILE_PATH = 'Data/WordsList.csv'
 USERDATA_CSV_FILE_PATH = 'Data/UserData.csv'
 CLASSDATA_CSV_FILE_PATH = 'Data/ClassData.csv'
 ATTEMPTDATA_CSV_FILE_PATH = 'Data/AttemptData.csv'
+PLACEHOLDER_IMAGE = "Data/image/placeholder_image.png"
 
 # File path for the CSV in the Streamlit environment
 prd_TestsList_path = 'prd_Data/prd_TestsListData.csv'
@@ -17,6 +18,7 @@ prd_WordsList_path = 'prd_Data/prd_WordsListData.csv'
 prd_UserData_path = 'prd_Data/prd_UserData.csv'
 prd_ClassData_path = 'prd_Data/prd_ClassData.csv'
 prd_AttemptData_path = 'prd_Data/prd_AttemptData.csv'
+prd_Data_path = 'prd_Data/'
 prd_Audio_path = 'prd_Data/prd_Audio'
 prd_Temp_path = 'prd_Data/prd_Temp'
 
@@ -27,6 +29,19 @@ def initialize_folder(directory_path):
         st.info(f"Successful create folder {directory_path}")
     else:
         st.info(f"Already exist folder {directory_path}")
+
+def clear_files_in_folder(folder_path):
+    """Remove all files in the specified folder."""
+    for filename in os.listdir(folder_path):
+        file_path = os.path.join(folder_path, filename)
+        delete_file(file_path)
+
+def delete_file(file_path):
+    try:
+        if os.path.isfile(file_path) or os.path.islink(file_path):
+            os.remove(file_path)  # Remove the file
+    except Exception as e:
+            print(f'Failed to delete {file_path}. Reason: {e}')
 
 def initialize_data():
     # Load CSV data

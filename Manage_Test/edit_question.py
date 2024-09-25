@@ -228,6 +228,7 @@ def show_question_editor():
         # Update the CSV file when the button is clicked
         if st.button("Update"):
             update_words_csv(edited_df, full_df, test_id)
+    st.write("---")
 
 # Ensure 'page' is initialized
 if "page" not in st.session_state:
