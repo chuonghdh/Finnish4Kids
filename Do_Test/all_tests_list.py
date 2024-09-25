@@ -29,10 +29,10 @@ def fetch_and_resize_image(url, size):
         return img
     except requests.RequestException as e:
         logger.error(f"Error fetching image from {url}: {e}")
-        return Image.open(cm.PLACEHOLDER_IMAGE).resize((size, size))
+        return Image.open( cm.PLACEHOLDER_IMAGE).resize((size, size))
     except Exception as e:
         logger.error(f"Error processing image from {url}: {e}")
-        return Image.open(cm.PLACEHOLDER_IMAGE).resize((size, size))
+        return Image.open( cm.PLACEHOLDER_IMAGE).resize((size, size))
 
 def get_filtered_words(test_id):
     """Read and filter the WordsList.csv file based on the TestID."""
