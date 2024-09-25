@@ -19,7 +19,7 @@ logger = logging.getLogger(__name__)
 # Constants for file paths
 IMAGE_SIZE = 80  # Set this to the desired thumbnail size (e.g., 60 pixels)
 
-@st.cache_data
+#@st.cache_data
 def fetch_and_resize_image(url, size):
     """Fetch an image from a URL and resize it to the given size."""
     try:
