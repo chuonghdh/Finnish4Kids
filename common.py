@@ -10,7 +10,7 @@ WORDS_CSV_FILE_PATH = 'Data/WordsList.csv'
 USERDATA_CSV_FILE_PATH = 'Data/UserData.csv'
 CLASSDATA_CSV_FILE_PATH = 'Data/ClassData.csv'
 ATTEMPTDATA_CSV_FILE_PATH = 'Data/AttemptData.csv'
-PLACEHOLDER_IMAGE = "Data/image/placeholder_image.png"
+PLACEHOLDER_IMAGE = 'Data/image/placeholder_image.png'
 
 # File path for the CSV in the Streamlit environment
 prd_TestsList_path = 'prd_Data/prd_TestsListData.csv'

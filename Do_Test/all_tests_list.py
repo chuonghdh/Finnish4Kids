@@ -10,7 +10,7 @@ from Do_Test.define_metadata import main_define_metadata
 from Do_Test.do_test import main_do_test
 from Do_Test.result_page import main_result_page
 from Do_Test.gen_audio import create_full_audio
-from Do_Test.gen_audio import regen_full_audio
+#from Do_Test.gen_audio import regen_full_audio
 
 # Setup logging
 logging.basicConfig(level=logging.INFO)
