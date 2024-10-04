@@ -114,7 +114,6 @@ def create_full_audio(audio_name, df, save_path):
 
 def regen_full_audio(audio_name, df, save_path):
     final_audio_filename = f"{audio_name}.mp3"
-    
     full_path_to_file = f"{save_path}/{final_audio_filename}"
     if os.path.exists(full_path_to_file):
         cm.delete_file(full_path_to_file)
