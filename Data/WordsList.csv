@@ -343,8 +343,8 @@
 342,20,Me juoksemme puistossa,fi,,We run in the park,
 343,20,Te juoksette kilpaa,fi,,You all run a race,
 344,20,He juoksevat stadionilla,fi,,They run in the stadium,
-345,21,okiea,fi,,right side,https://kuha.papunet.net/api/image/3004?lang=fi
-346,21,vasen,fi,,left side,https://kuha.papunet.net/api/image/3003?lang=fi
+345,21,oikea puoli,fi,,right side,https://kuha.papunet.net/api/image/3004?lang=fi
+346,21,vasen puoli,fi,,left side,https://kuha.papunet.net/api/image/3003?lang=fi
 347,21,oikealla puolella,fi,,on the right side,https://kuha.papunet.net/api/image/15388?lang=fi
 348,21,vasemmalla puolella,fi,,on the left side,https://kuha.papunet.net/api/image/15384?lang=fi
 349,21,päällä,fi,,on top,https://kuha.papunet.net/api/image/3036?lang=fi
@@ -371,7 +371,7 @@
 370,23,seisoo,fi,đứng,to stand,
 371,23,kävelee,fi,đi bộ,to walk,
 372,23,jouksee,fi,chạy bộ,to run,
-373,23,kontaa,fi,bò,to crawl,
+373,23,konttaa,fi,bò,to crawl,
 374,23,tulee,fi,đến,to come,
 375,23,menee,fi,đi đến,to go,
 376,23,makaa,fi,nằm xuống,to lie down,
