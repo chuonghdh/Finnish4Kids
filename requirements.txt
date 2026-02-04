@@ -11,7 +11,7 @@ streamlit-aggrid==0.2.3
 # googletrans==4.0.0-rc1
 # pydub
 chardet==5.2.0
-googletrans==4.0.2
+googletrans==4.0.0-rc1
 gTTS==2.5.4
 pandas==2.2.3
 Pillow==12.1.0
