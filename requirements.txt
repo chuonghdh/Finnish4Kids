@@ -1,15 +1,25 @@
-streamlit
-pandas
-numpy
-gTTS
-streamlit-aggrid
-gdown
-openpyxl
-chardet
-pyperclip
-streamlit-js-eval
-googletrans==4.0.0-rc1
-pydub
+# streamlit
+# pandas
+# numpy
+# gTTS
+streamlit-aggrid==0.2.3
+# gdown
+# openpyxl
+# chardet
+# pyperclip
+# streamlit-js-eval
+# googletrans==4.0.0-rc1
+# pydub
+chardet==5.2.0
+googletrans==4.0.2
+gTTS==2.5.4
+pandas==2.2.3
+Pillow==12.1.0
+pydub==0.25.1
+pyperclip==1.8.2
+Requests==2.32.5
+streamlit==1.53.1
+streamlit_js_eval==0.1.5
 #io
 #glob
 #base64
