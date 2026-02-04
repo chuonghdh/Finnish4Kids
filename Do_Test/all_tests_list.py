@@ -74,6 +74,9 @@ def show_dialog(test_name, test_id):
     
 
 def show_test_list(df):
+    # Sort by TestID in descending order (bigger numbers first)
+    df = df.sort_values('TestID', ascending=False)
+    
     st.write("### Select your test")
 
     for index, row in df.iterrows():
