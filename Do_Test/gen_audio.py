@@ -9,6 +9,11 @@ import glob
 import common as cm
 from googletrans import Translator
 
+# Force IPv4 and set timeout
+os.environ['GRPC_DNS_RESOLVER'] = 'native'
+os.environ['HTTP_PROXY'] = ''  # Clear any proxy
+os.environ['HTTPS_PROXY'] = ''
+
 #WORDS_CSV_FILE_PATH = 'Data/WordsList.csv'
 #prd_WordsList_path = 'prd_Data/prd_WordsListData.csv'
 #prd_Audio_path = 'prd_Data/prd_Audio'
@@ -25,16 +30,20 @@ def delete_files(folder_path, file_type):
             print(f"Error deleting {file}: {e}")
 
 def gen_audio(word, lang_code,is_slow):
-    tts = gTTS(text=word, lang=lang_code, slow=is_slow)
-    audio_fp = io.BytesIO()  # Create an in-memory byte stream
-    tts.write_to_fp(audio_fp)  # Write audio to the stream
-    audio_fp.seek(0)  # Move the pointer to the start of the stream
+    try:    
+        tts = gTTS(text=word, lang=lang_code, slow=is_slow)
+        audio_fp = io.BytesIO()  # Create an in-memory byte stream
+        tts.write_to_fp(audio_fp)  # Write audio to the stream
+        audio_fp.seek(0)  # Move the pointer to the start of the stream
 
-    # Encode audio data to base64
-    audio_bytes = audio_fp.read()
-    audio_b64 = base64.b64encode(audio_bytes).decode('utf-8')
+        # Encode audio data to base64
+        audio_bytes = audio_fp.read()
+        audio_b64 = base64.b64encode(audio_bytes).decode('utf-8')
     
-    return audio_b64
+        return audio_b64
+    except Exception as e:
+        st.error(f"TTS Error for '{word}': {str(e)}")
+        return None
 
 def save_audio_b64_to_file(audio_b64, file_path):
     # Decode the base64 string back to bytes
