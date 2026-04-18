@@ -648,27 +648,27 @@
 698,35,kapea leveä,fi,,narrow >< wide,
 699,35,kallis halpa,fi,,expensive >< cheap,
 700,36,käsineet,fi,,gloves (găng tay nói chung),https://kuha.papunet.net/api/image/1313?lang=fi
-701,36,lapaset,fi,,mittens (găng tay liền ngón),https://kuha.papunet.net/api/image/1289?lang=fi
+701,36,pipo,fi,,beanie (mũ len),https://kuha.papunet.net/api/image/38054?lang=fi
 702,36,sormikkaat,fi,,finger gloves (găng tay có ngón),https://kuha.papunet.net/api/image/1305?lang=fi
 703,36,lakki,fi,,cap (mũ lưỡi trai),https://kuha.papunet.net/api/image/1317?lang=fi
 704,36,huivi,fi,,scarf (khăn quàng cổ),https://kuha.papunet.net/api/image/1246?lang=fi
 705,36,kypärä,fi,,helmet (mũ bảo hiểm),https://kuha.papunet.net/api/image/34909?lang=fi
 706,36,nahkakengät,fi,,leather shoes (giày da),https://kuha.papunet.net/api/image/1389?lang=fi
-707,36,piikkarit,fi,,spikes (giày có đinh),
-708,36,lenkarit,fi,,sneakers (giày thể thao),https://kuha.papunet.net/api/image/12095?lang=fi
-709,36,saappaat,fi,,boots (ủng),
+707,36,huppari,fi,,hoodie (áo khoác có mũ),https://kuha.papunet.net/api/image/1279?lang=fi
+708,36,lenkkarit,fi,,sneakers (giày thể thao),https://kuha.papunet.net/api/image/12095?lang=fi
+709,36,kumisaappaat,fi,,rubber boots (ủng cao su),https://kuha.papunet.net/api/image/36359?lang=fi
 710,36,sandaalit,fi,,sandals (dép xăng đan),
-711,36,korkokengät,fi,,dress shoes (giày cao gót),
-712,36,tossut,fi,,slippers (dép đi trong nhà),
-713,36,potkuhousut,fi,,sweatpants (quần thể thao),
+711,36,korkokengät,fi,,dress shoes (giày cao gót),https://kuha.papunet.net/api/image/21637?lang=fi
+712,36,tossut,fi,,slippers (dép đi trong nhà),https://kuha.papunet.net/api/image/11664?lang=fi
+713,36,takki,fi,,coat (áo khoác dài),https://kuha.papunet.net/api/image/1238?lang=fi
 714,36,shortsit,fi,,shorts (quần đùi),
 715,36,farkut,fi,,jeans (quần bò),
-716,36,housut,fi,,pants (quần dài),
-717,36,hame,fi,,skirt (váy),
-718,36,puolipotkarit,fi,,capris (quần lửng),
-719,36,haalarit,fi,,jumpsuit (áo liền quần),
-720,36,toppahaalari,fi,,snowsuit (áo liền quần cho trẻ em),
-721,36,jakku,fi,,jacket (áo khoác),
+716,36,housut,fi,,pants (quần dài),https://kuha.papunet.net/api/image/20814?lang=fi
+717,36,hame,fi,,skirt (váy),https://kuha.papunet.net/api/image/1165?lang=fi
+718,36,mekko,fi,,dress (váy đầm),https://kuha.papunet.net/api/image/20801?lang=fi
+719,36,haalarit,fi,,jumpsuit (áo liền quần),https://kuha.papunet.net/api/image/1166?lang=fi
+720,36,talvihaalari,fi,,snowsuit (áo liền quần mùa đông),https://kuha.papunet.net/api/image/32917?lang=fi
+721,36,jakku,fi,,jacket (áo khoác vét), https://www.oliva.fi/wp-content/uploads/2025/02/Soulmate_dina_takki.jpg
 722,36,pusero,fi,,blouse (áo sơ mi nữ),
 723,36,viilatakki,fi,,wool jacket (áo khoác len),
 724,36,toppi,fi,,tank top girl (áo hai dây nữ),
@@ -687,7 +687,6 @@
 737,36,vyö,fi,,belt (thắt lưng),
 738,36,kerrasto,fi,,thermal underwear (đồ lót giữ nhiệt),
 739,36,bokserit,fi,,boxer shorts (quần đùi nam),
-740,36,huppari,fi,,hoodie (áo khoác có mũ),
 741,37,nukkua,fi,,to sleep,
 742,37,nousta,fi,,to get up,
 743,37,herätä,fi,,to wake up,
@@ -737,12 +736,11 @@
 787,38,kynsi kynnet,fi,,nail nails,
 788,38,kyynärpää,fi,,elbow,
 789,38,käsivarsi käsivarret,fi,,arm arms,
-790,38,sorsi sormet,fi,,finger fingers,
+790,38,sormi sormet,fi,,finger fingers,
 791,38,rinta rinnat,fi,,chest chests,
 792,38,alapää,fi,,genital,
 793,38,jalka jalat,fi,,foot feet,
 794,38,niska,fi,,back of the neck (ót),
-795,38,hartia,fi,,shoulder,
 796,38,kylki kyljet,fi,,side sides (hai bên hông),
 797,38,peppu,fi,,butt,
 798,38,kantapää,fi,,heel (gót chân),
