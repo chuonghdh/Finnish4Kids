@@ -4,10 +4,8 @@ import requests
 from streamlit_js_eval import streamlit_js_eval
 
 def update_test_result_df(df, word_index, score):
-    if score >= 0:
-        df.loc[df['order'] == word_index, ['Score', 'Complete']] = [score, 'Y']
-    else:
-        df.loc[df['order'] == word_index, ['Score', 'Complete']] = [-1, 'N']
+    idx = df.index[word_index - 1]
+    df.loc[idx, ['Score', 'Complete']] = [score, 'Y'] if score >= 0 else [-1, 'N']
     return df
 
 # Function to apply row-based styling
@@ -29,15 +27,23 @@ def bold_words(val):
     return 'font-weight: bold' if val else ''
 
 def main_result_page():
-    temp = streamlit_js_eval(js_expressions="sessionStorage.getItem('wordScore');", key = "Get_Score4")
-    
-    if temp != -1 and temp is not None: 
-        st.session_state.last_score = float(temp)
-        st.session_state.test_result = update_test_result_df(st.session_state.test_result, st.session_state.word_index, st.session_state.last_score)
-    
-    #streamlit_js_eval(js_expressions="sessionStorage.clear();", key="clear1")
-    streamlit_js_eval(js_expressions="sessionStorage.setItem('wordScore', -1);", key="clear2")
     # Handle paging displaying session
+    # Only try to fetch the score if it hasn't been saved yet
+    temp = streamlit_js_eval(
+        js_expressions="sessionStorage.getItem('wordScore');", 
+        key="Final_Capture"
+    )   
+
+    # We use word_index here because it's the last word of the test
+    if temp is not None and int(temp) != -1:
+        st.session_state.test_result = update_test_result_df(
+            st.session_state.test_result, 
+            st.session_state.word_index, 
+            float(temp)
+        )
+    # Reset browser for the next possible test run
+    streamlit_js_eval(js_expressions="sessionStorage.setItem('wordScore', -1);", key="final_reset")
+
     if st.session_state.page == 'result_page':
         # Show final result
         result_df = st.session_state.get('test_result')

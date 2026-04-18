@@ -306,10 +306,8 @@ def gen_audio(word, lang_code):
     return audio_b64
 
 def update_test_result_df(df, word_index, score):
-    if score >= 0:
-        df.loc[df['order'] == word_index, ['Score', 'Complete']] = [score, 'Y']
-    else:
-        df.loc[df['order'] == word_index, ['Score', 'Complete']] = [-1, 'N']
+    idx = df.index[word_index - 1]
+    df.loc[idx, ['Score', 'Complete']] = [score, 'Y'] if score >= 0 else [-1, 'N']
     return df
 
 # Define a function to display data of the current row
@@ -373,11 +371,18 @@ def display_current_row(df, order_number):
             current_row_data['Description'].iloc[0]
             ), unsafe_allow_html=True)
         word_matching(current_row_data['Word'].iloc[0], st.session_state.tid)  
-        temp = streamlit_js_eval(js_expressions="sessionStorage.getItem('wordScore');", key = "Get_Score3")
-    if temp != -1 and temp is not None:
-        st.session_state.last_score = float(temp)
-        st.session_state.test_result = update_test_result_df(st.session_state.test_result, st.session_state.word_index-1, st.session_state.last_score)
-    streamlit_js_eval(js_expressions="sessionStorage.setItem('wordScore', -1);", key="clear1")
+        # 1. Use a STATIC key for the live score of the current problem
+        temp = streamlit_js_eval(
+            js_expressions="sessionStorage.getItem('wordScore');", 
+            key=f"Score_Grab_{order_number}")
+        # 2. Only update if the score is valid
+        if temp is not None and int(temp) != -1:
+            st.session_state.test_result = update_test_result_df(
+                st.session_state.test_result, 
+                order_number, 
+                float(temp)
+            )
+    #   streamlit_js_eval(js_expressions="sessionStorage.setItem('wordScore', -1);", key="clear1")
     
     incol1, incol2 = st.columns([3,1])
     with incol1:    
@@ -388,15 +393,31 @@ def display_current_row(df, order_number):
             button_label = "Next"  
         else:
             button_label = "Submit"
-        if st.button(button_label, key="next_word"):
+        if st.button(button_label, key="next_word_btn"):
+            # Final check: grab the score for the CURRENT order_number before moving to the next
+            score_val = streamlit_js_eval(
+                js_expressions="sessionStorage.getItem('wordScore');", 
+                key=f"save_score_{st.session_state.word_index}"
+            )
+            if score_val is not None and int(score_val) != -1:
+                st.session_state.test_result = update_test_result_df(
+                    st.session_state.test_result, 
+                    st.session_state.word_index, 
+                    float(score_val)
+                )
+
+            # Reset browser storage BEFORE increasing the index
+            streamlit_js_eval(
+                js_expressions="sessionStorage.setItem('wordScore', -1);", 
+                key=f"clear_browser_{st.session_state.word_index}"
+            )
+
             if st.session_state.word_index < num_of_problems:
                 st.session_state.word_index += 1
-                st.session_state.last_score = None
                 st.rerun()
-            if st.session_state.word_index == num_of_problems:
+            else:
                 st.session_state.page = "result_page"
                 st.rerun()
-            
                         
 
 def init_test_result_df(df_test_words):
