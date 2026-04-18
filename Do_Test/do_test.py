@@ -1,3 +1,6 @@
+# ============================================================================
+# IMPORTS
+# ============================================================================
 import streamlit as st
 import pandas as pd
 import os
@@ -5,34 +8,36 @@ import requests
 from PIL import Image
 from io import BytesIO
 import logging
-from PIL import Image
 import random
 from gtts import gTTS
-import tempfile
 import streamlit.components.v1 as components
 from streamlit_js_eval import streamlit_js_eval
 import base64
-import pyperclip
-import io
-import json
-import time
+
+
+# ============================================================================
+# SETUP & CONFIGURATION
+# ============================================================================
 
 # Setup logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# Constants for file paths
+# Constants for file paths - Development
 TESTS_CSV_FILE_PATH = 'Data/TestsList.csv'
 WORDS_CSV_FILE_PATH = 'Data/WordsList.csv'
 ATTEMPTDATA_CSV_FILE_PATH = 'Data/AttemptData.csv'
+
+# Constants for file paths - Production
+PRD_TESTS_LIST_PATH = 'prd_Data/prd_TestsListData.csv'
+PRD_WORDS_LIST_PATH = 'prd_Data/prd_WordsListData.csv'
+PRD_ATTEMPT_DATA_PATH = 'prd_Data/prd_AttemptData.csv'
+
+# Image constants
 PLACEHOLDER_IMAGE = "Data/image/placeholder_image.png"
-IMAGE_SIZE = 100  # Set this to the desired thumbnail size
+IMAGE_SIZE = 100
 
-# File path for the CSV in the Streamlit environment
-prd_TestsList_path = 'prd_Data/prd_TestsListData.csv'
-prd_WordsList_path = 'prd_Data/prd_WordsListData.csv'
-prd_AttemptData_path = 'prd_Data/prd_AttemptData.csv'
-
+# Streamlit page styling
 st.markdown(
     """
     <style>
@@ -47,28 +52,54 @@ st.markdown(
     unsafe_allow_html=True
 )
 
-# Convert the sound file to base64
+
+# ============================================================================
+# AUDIO HANDLING
+# ============================================================================
+
 def get_base64_sound(file_path):
+    """Convert audio file to base64 string."""
     with open(file_path, "rb") as sound_file:
         data = sound_file.read()
         return base64.b64encode(data).decode()
 
-# Convert 'beep-beep.wav' and 'cheerful.wav' files to base64 strings
-beep_sound_base64 = get_base64_sound("Data/sound/beep-beep.wav") #Kalam requirement "Data/sound/beep-beep2.wav"
-cheerful_sound_base64 = get_base64_sound("Data/sound/cheerful.wav")
+
+def gen_audio(word, lang_code):
+    """Generate audio from text using Google Text-to-Speech and return as base64."""
+    tts = gTTS(text=word, lang=lang_code)
+    audio_fp = BytesIO()  # Create an in-memory byte stream
+    tts.write_to_fp(audio_fp)  # Write audio to the stream
+    audio_fp.seek(0)  # Move the pointer to the start of the stream
+
+    # Encode audio data to base64
+    audio_bytes = audio_fp.read()
+    audio_b64 = base64.b64encode(audio_bytes).decode('utf-8')
+    
+    return audio_b64
+
+
+# Load audio files and convert to base64
+BEEP_SOUND_BASE64 = get_base64_sound("Data/sound/beep-beep.wav")
+CHEERFUL_SOUND_BASE64 = get_base64_sound("Data/sound/cheerful.wav")
+
+
+
+
+
+# ============================================================================
+# DATA HANDLING - CSV & DATABASE FUNCTIONS
+# ============================================================================
 
 @st.cache_data
 def read_csv_file(repo_path, prd_path):
-    """Read data from a CSV file."""
+    """Read data from a CSV file with fallback from production to development."""
     try:
         if os.path.exists(prd_path):
             df = pd.read_csv(prd_path)
-            #st.info("Data loaded from local storage.")
         else:
             # Initial load from a repository, as a fallback (if needed)
             df = pd.read_csv(repo_path)  # Replace with your default CSV
             df.to_csv(prd_path, index=False)  # Save to local environment
-            #st.info("Data loaded from repository and saved to local storage.")
         return df
     except (FileNotFoundError, pd.errors.EmptyDataError, pd.errors.ParserError) as e:
         st.error(f"Error loading file: {repo_path} - {str(e)}")
@@ -77,27 +108,59 @@ def read_csv_file(repo_path, prd_path):
         st.error(f"Unexpected error: {e}")
         return pd.DataFrame()
 
+
 def get_filtered_words(test_id):
     """Read and filter the WordsList.csv file based on the TestID."""
     try:
-        df_words = read_csv_file(WORDS_CSV_FILE_PATH, prd_WordsList_path)
+        df_words = read_csv_file(WORDS_CSV_FILE_PATH, PRD_WORDS_LIST_PATH)
         filtered_words = df_words[df_words['TestID'] == int(test_id)]
-        return filtered_words  # Return the filtered DataFrame
+        return filtered_words
     except Exception as e:
         st.error(f"Error filtering WordsList.csv: {e}")
         return pd.DataFrame()
 
+
 def set_words_order(df, order_type):
+    """Add ordering to words dataframe based on order_type."""
     number_of_rows = len(df) 
     if order_type == "sequence":
-        order = list(range(1, number_of_rows + 1)) # Create a sequence list from 1 to number_of_rows
+        order = list(range(1, number_of_rows + 1))
     elif order_type == "random":
-        order = random.sample(range(1, number_of_rows + 1), number_of_rows) # Create a random list from 1 to number_of_rows without duplicates
+        order = random.sample(range(1, number_of_rows + 1), number_of_rows)
     else:
         order = list(range(1, number_of_rows + 1))
         st.warning("Invalid order_type. Must be 'sequence' or 'random'. return default order is 'sequence'")
     df.insert(0, 'order', order)
     return df
+
+
+def init_test_result_df(df_test_words):
+    """Initialize test result dataframe with structure for tracking scores."""
+    df = pd.DataFrame({
+        'order': df_test_words['order'],
+        'WordID': df_test_words['WordID'],
+        'Word': df_test_words['Word'],
+        'Description': df_test_words['Description'],
+        'MaxScore': df_test_words['Word'].apply(lambda x: len(x.replace(" ", ""))),
+        'Score': -1,
+        'Complete': 'N'
+    })
+    return df
+
+
+def update_test_result_df(df, word_index, score):
+    """Update test result dataframe with score for a specific word."""
+    idx = df.index[word_index - 1]
+    df.loc[idx, ['Score', 'Complete']] = [score, 'Y'] if score >= 0 else [-1, 'N']
+    return df
+
+
+
+
+
+# ============================================================================
+# IMAGE HANDLING
+# ============================================================================
 
 @st.cache_data
 def fetch_and_resize_image(url, size):
@@ -114,8 +177,16 @@ def fetch_and_resize_image(url, size):
         logger.error(f"Error processing image from {url}: {e}")
         return Image.open(PLACEHOLDER_IMAGE).resize((size, size))
 
-# Word matching function using java script to process
+
+
+
+
+# ============================================================================
+# UI & DISPLAY COMPONENTS
+# ============================================================================
+
 def word_matching(word, tid):
+    """Interactive word matching component with JavaScript for real-time validation."""
     word_score = len(word) - word.count(" ")
     # Create an HTML component with JavaScript to handle input, color, and deletion of text
     components.html(
@@ -172,24 +243,22 @@ def word_matching(word, tid):
             </head>
             <body>
                 <div id="container">
-                    <p id="displayArea">{''.join('_' if c == ' ' else '-' for c in word)}</p> <!-- Display underscores for spaces and dashes for other characters -->
-                    <p id="scoreArea">Score: {word_score}</p> <!-- Display the initial word score -->
+                    <p id="displayArea">{''.join('_' if c == ' ' else '-' for c in word)}</p>
+                    <p id="scoreArea">Score: {word_score}</p>
                 </div>
                 <input type="text" id="textInput" placeholder="Enter some text" oninput="checkText()" />
 
-                <audio id="alarmSound" src="data:audio/wav;base64,{beep_sound_base64}" preload="auto"></audio> <!-- Beep alarm sound -->
-                <audio id="cheerfulSound" src="data:audio/wav;base64,{cheerful_sound_base64}" preload="auto"></audio> <!-- Cheerful sound -->
+                <audio id="alarmSound" src="data:audio/wav;base64,{BEEP_SOUND_BASE64}" preload="auto"></audio>
+                <audio id="cheerfulSound" src="data:audio/wav;base64,{CHEERFUL_SOUND_BASE64}" preload="auto"></audio>
 
                 <script>
                     // JavaScript variables
-                    const word = "{word}".toLowerCase(); // Convert the word to lowercase for case-insensitive comparison
-                    let wordScore = {word_score}; // Initialize wordScore with the length of the word
-                    //initialize wordScore in sessionStorate = -1 as alabel of not yet done
-                    //sessionStorage.setItem('wordScore', -1);
+                    const word = "{word}".toLowerCase();
+                    let wordScore = {word_score};
                     local_tid = "{tid}";
                     let timer = null;
-                    let alarmPlayed = false; // To prevent multiple sound overlaps
-                    let cheerPlayed = false; // To play cheerful sound only once
+                    let alarmPlayed = false;
+                    let cheerPlayed = false;
 
                     function checkText() {{
                         // Get the value from the input field and convert it to lowercase for case-insensitive comparison
@@ -205,15 +274,15 @@ def word_matching(word, tid):
                                     // Matching character, keep it green
                                     updatedText += '<span style="color: green;">' + inputText[i] + '</span>';
                                     lastIndex = i + 1;
-                                    alarmPlayed = false; // Reset alarm
+                                    alarmPlayed = false;
                                 }} else {{
                                     // Non-matching character, make it red, stop further matching, and play the alarm sound
                                     updatedText += '<span style="color: red;">' + inputText[i] + '</span>';
                                     if (!alarmPlayed) {{
-                                        document.getElementById("alarmSound").play(); // Play the alarm sound
-                                        alarmPlayed = true; // Prevent multiple plays
+                                        document.getElementById("alarmSound").play();
+                                        alarmPlayed = true;
                                         if (wordScore > 0) {{
-                                            wordScore--; // Deduct one point for the wrong character if score is above zero
+                                            wordScore--;
                                         }}
                                     }}
                                     allMatch = false;
@@ -233,16 +302,13 @@ def word_matching(word, tid):
                         // Check if the entire input matches the word
                         if (inputText === word && !cheerPlayed) {{
                             document.getElementById("cheerfulSound").play();
-                            cheerPlayed = true; // Play cheerful sound only once
+                            cheerPlayed = true;
 
                             // Disable the input field since the input matches the word
                             document.getElementById("textInput").disabled = true;
 
-                            //navigator.clipboard.writeText(wordScore)
                             sessionStorage.setItem('wordScore', wordScore);
                             
-                            
-                            // Print the wordScore to the console for debugging
                             console.log('wordScore:', wordScore);
                             console.log("wordScore from sessionStorage:", sessionStorage.getItem('wordScore'));
                         }}
@@ -266,21 +332,22 @@ def word_matching(word, tid):
             </body>
         </html>
         """,
-        height=130  # Adjust height as needed
-    )   
+        height=130
+    )
 
 
 def show_result(current_row_data):
+    """Display word result with image and phonetic information."""
     tab1, tab2 = st.tabs(["Image", "Result"])
     with tab1:
         # Check if the image URL is valid; if not, use the placeholder image
         image_url = current_row_data["Image"].iloc[0]
-        col1,col2 = st.columns([1,4])
+        col1, col2 = st.columns([1, 4])
         with col1:
             st.write(" ")
         with col2:
             st.image(fetch_and_resize_image(image_url if image_url else PLACEHOLDER_IMAGE, IMAGE_SIZE))
-            #t = streamlit_js_eval(js_expressions="sessionStorage.getItem('wordScore');", key = "Get_Score2")         
+             
     with tab2:  
         st.write(" ")
         st.subheader(f"{current_row_data['Word'].iloc[0]}")
@@ -289,41 +356,21 @@ def show_result(current_row_data):
             word_phone = current_row_data['WordPhonetic'].iloc[0]
         st.write(f" {word_phone}")
 
-def gen_audio(word, lang_code):
-    # tts = gTTS(text = word, lang = lang_code) # Generate speech
-    # with tempfile.NamedTemporaryFile(delete=False, suffix='.mp3') as fp: # Save the speech to a temporary file
-    #     tts.save(fp.name)
-    # return fp.name
-    tts = gTTS(text=word, lang=lang_code)
-    audio_fp = io.BytesIO()  # Create an in-memory byte stream
-    tts.write_to_fp(audio_fp)  # Write audio to the stream
-    audio_fp.seek(0)  # Move the pointer to the start of the stream
 
-    # Encode audio data to base64
-    audio_bytes = audio_fp.read()
-    audio_b64 = base64.b64encode(audio_bytes).decode('utf-8')
-    
-    return audio_b64
-
-def update_test_result_df(df, word_index, score):
-    idx = df.index[word_index - 1]
-    df.loc[idx, ['Score', 'Complete']] = [score, 'Y'] if score >= 0 else [-1, 'N']
-    return df
-
-# Define a function to display data of the current row
 def display_current_row(df, order_number):
+    """Display the current test question with audio, image, and word matching interface."""
     num_of_problems = len(df)
-    current_row_data = df[df['order']== order_number]  
+    current_row_data = df[df['order'] == order_number]  
     current_word = current_row_data['Word'].iloc[0]
     current_langcode = current_row_data['LanguageCode'].iloc[0]
     st.session_state.word_audio = gen_audio(current_word, current_langcode)
     
     st.write(f"Problem {order_number}/{num_of_problems}")
-    col1, col2 = st.columns([1,2])
+    col1, col2 = st.columns([1, 2])
     with col1:
         with st.container(border=1):
             show_result(current_row_data)
-            #Display a button for trigger Audio play
+            # Display a button for trigger Audio play
             if st.button("Play Audio"):
                 # Custom CSS to resize the audio player
                 st.markdown(
@@ -332,8 +379,7 @@ def display_current_row(df, order_number):
                     audio {
                         width: 100%;
                         max-height: 40px;
-                        /*max-width: 300px;  Adjust the max-width as needed */
-                        margin: 0 auto; /*Center the audio player */
+                        margin: 0 auto;
                         display: block;
                     }
                     </style>
@@ -360,7 +406,7 @@ def display_current_row(df, order_number):
             align-items: center; 
             justify-content: center; 
             border: 1px solid lightgray; 
-            border-radius: 8px;  /* Rounded corners */
+            border-radius: 8px;
             background-color:#D9EEE1; 
             '>
                 <b>{}</b>
@@ -371,6 +417,7 @@ def display_current_row(df, order_number):
             current_row_data['Description'].iloc[0]
             ), unsafe_allow_html=True)
         word_matching(current_row_data['Word'].iloc[0], st.session_state.tid)  
+        
         # 1. Use a STATIC key for the live score of the current problem
         temp = streamlit_js_eval(
             js_expressions="sessionStorage.getItem('wordScore');", 
@@ -382,9 +429,8 @@ def display_current_row(df, order_number):
                 order_number, 
                 float(temp)
             )
-    #   streamlit_js_eval(js_expressions="sessionStorage.setItem('wordScore', -1);", key="clear1")
     
-    incol1, incol2 = st.columns([3,1])
+    incol1, incol2 = st.columns([3, 1])
     with incol1:    
         st.write(" ")
     with incol2:
@@ -418,21 +464,17 @@ def display_current_row(df, order_number):
             else:
                 st.session_state.page = "result_page"
                 st.rerun()
-                        
 
-def init_test_result_df(df_test_words):
-    df = pd.DataFrame({
-        'order': df_test_words['order'],
-        'WordID': df_test_words['WordID'],
-        'Word': df_test_words['Word'],
-        'Description': df_test_words['Description'],
-        'MaxScore': df_test_words['Word'].apply(lambda x: len(x.replace(" ", ""))),
-        'Score': -1,
-        'Complete': 'N'
-    })
-    return df
+
+
+
+
+# ============================================================================
+# MAIN LOGIC
+# ============================================================================
 
 def main_do_test():
+    """Main function to orchestrate the test workflow."""
     # Handle paging displaying session
     if st.session_state.page == 'do_test':
         selected_test = st.session_state.get("selected_test")
@@ -448,15 +490,21 @@ def main_do_test():
         st.session_state.word_index = 1 
     
     test_id = int(selected_test)
-    # Get the filtered words data base on TestID (selected_test) from WordsList.csv
+    # Get the filtered words data based on TestID (selected_test) from WordsList.csv
     df_test_words = get_filtered_words(test_id)
-    df_test_words = set_words_order(df_test_words, order_type = "sequence") # order_type = "sequence"|"random"
+    df_test_words = set_words_order(df_test_words, order_type="sequence")
         
     # Initialize the test_result dataframe if not exist
     if 'test_result' not in st.session_state or st.session_state.test_result is None:
         st.session_state.test_result = init_test_result_df(df_test_words)
         
     st.subheader(f"Do Test - {test_id}")
-    display_current_row(df_test_words,st.session_state.word_index)
+    display_current_row(df_test_words, st.session_state.word_index)
 
-main_do_test()
+
+# ============================================================================
+# APPLICATION ENTRY POINT
+# ============================================================================
+
+if __name__ == "__main__":
+    main_do_test()
